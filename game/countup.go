@@ -23,7 +23,7 @@ func NewGameCountUp(board string, opt OptionCountUp) *GameCountUp {
 	g := new(GameCountUp)
 	g.SetBoard(board)
 	g.target = opt.Target
-	g.State = common.NewGameState()
+	g.state = common.NewGameState()
 
 	g.DisplayStyle = fmt.Sprintf("Count-Up %d", opt.Target)
 
@@ -32,7 +32,7 @@ func NewGameCountUp(board string, opt OptionCountUp) *GameCountUp {
 
 func (game *GameCountUp) HandleDart(sector common.Sector) (result *common.GameState, error error) {
 
-	if game.State.Ongoing == common.READY {
+	if game.State().Ongoing == common.READY {
 		// first dart starts the game
 		err := game.Start()
 		if err != nil {
@@ -41,7 +41,7 @@ func (game *GameCountUp) HandleDart(sector common.Sector) (result *common.GameSt
 		}
 	}
 
-	if game.State.Ongoing != common.PLAYING {
+	if game.State().Ongoing != common.PLAYING {
 		error = errors.New("Game is not started or is ended")
 		return
 	}
@@ -53,7 +53,7 @@ func (game *GameCountUp) HandleDart(sector common.Sector) (result *common.GameSt
 	}
 
 	point := sector.Val * sector.Pos
-	state := game.State
+	state := game.State()
 
 	state.LastSector = sector
 
@@ -63,7 +63,7 @@ func (game *GameCountUp) HandleDart(sector common.Sector) (result *common.GameSt
 
 	if state.Players[state.CurrentPlayer].Score >= game.target {
 		game.winner()
-		if game.State.Ongoing == common.PLAYING {
+		if game.State().Ongoing == common.PLAYING {
 			game.nextPlayer()
 		}
 
@@ -75,12 +75,12 @@ func (game *GameCountUp) HandleDart(sector common.Sector) (result *common.GameSt
 }
 
 func (game *GameCountUp) winner() {
-	state := game.State
+	state := game.State()
 	state.Players[state.CurrentPlayer].Rank = game.rank + 1
 	state.LastMsg = fmt.Sprintf("Player %d end at rank #%d", state.CurrentPlayer, game.rank+1)
 	game.rank++
 	if game.rank >= len(state.Players)-1 {
-		game.State.Ongoing = common.OVER
+		game.State().Ongoing = common.OVER
 		sort.Sort(common.ByRank(state.Players))
 		if len(state.Players) > 1 {
 			state.Players[len(state.Players)-1].Rank = game.rank + 1

@@ -11,25 +11,25 @@ type Game interface {
 	Start() error
 	AddPlayer(name string) error
 	HandleDart(sector common.Sector) (*common.GameState, error)
-	GetState() *common.GameState
+	State() *common.GameState
 	Board() string
 	SetBoard(board string)
 }
 
 type AGame struct {
-	State        *common.GameState
+	state        *common.GameState
 	DisplayStyle string
 	rank         int
 	board        string
 }
 
-func (game *AGame) GetState() *common.GameState {
-	return game.State
+func (game *AGame) State() *common.GameState {
+	return game.state
 }
 
 func (game *AGame) Start() (error error) {
-	if game.State.Ongoing == common.READY && len(game.State.Players) > 0 {
-		state := game.State
+	if game.state.Ongoing == common.READY && len(game.state.Players) > 0 {
+		state := game.state
 		state.Ongoing = common.PLAYING
 		state.CurrentPlayer = 0
 		state.CurrentDart = 0
@@ -45,11 +45,11 @@ func (game *AGame) Start() (error error) {
 }
 
 func (game *AGame) AddPlayer(name string) (error error) {
-	if game.State.Ongoing == common.INITIALIZING || game.State.Ongoing == common.READY {
+	if game.state.Ongoing == common.INITIALIZING || game.state.Ongoing == common.READY {
 		log.WithFields(log.Fields{"player": name}).Infof("Player added to the game")
-		game.State.Players = append(game.State.Players, common.PlayerState{Name: name})
+		game.state.Players = append(game.state.Players, common.PlayerState{Name: name})
 		// now that we have at least one player, we are in a ready state, waiting for other players or the first dart
-		game.State.Ongoing = common.READY
+		game.state.Ongoing = common.READY
 	} else {
 		error = errors.New("Game cannot be started")
 	}
@@ -57,7 +57,7 @@ func (game *AGame) AddPlayer(name string) (error error) {
 }
 
 func (game *AGame) nextDart() {
-	state := game.State
+	state := game.state
 	if state.CurrentDart == 2 {
 		game.nextPlayer()
 	} else {
@@ -67,7 +67,7 @@ func (game *AGame) nextDart() {
 }
 
 func (game *AGame) nextPlayer() {
-	state := game.State
+	state := game.state
 	state.CurrentDart = 0
 	state.CurrentPlayer = state.CurrentPlayer + 1
 	if state.CurrentPlayer >= len(state.Players) {
